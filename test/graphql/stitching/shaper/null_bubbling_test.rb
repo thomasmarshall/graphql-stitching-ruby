@@ -121,6 +121,28 @@ describe "GraphQL::Stitching::Shaper, null bubbling" do
     assert_equal expected, GraphQL::Stitching::Shaper.new(request).perform!(raw)
   end
 
+  def test_removes_null_items_for_required_list_elements
+    schema_sdl = "type Test { req: String! opt: String } type Query { test: [Test!] }"
+    request = GraphQL::Stitching::Request.new(
+      supergraph_from_schema(schema_sdl),
+      %|{ test { req opt } }|,
+    )
+    raw = {
+      "test" => [
+        { "req" => "yes", "opt" => nil },
+        { "req" => nil, "opt" => "yes" },
+      ]
+    }
+    expected = {
+      "test" => [
+        { "req" => "yes", "opt" => nil },
+      ]
+    }
+
+    strategy = GraphQL::Stitching::Shaper::Strategy::REMOVE_LIST_ITEMS
+    assert_equal expected, GraphQL::Stitching::Shaper.new(request, strategy:).perform!(raw)
+  end
+
   def test_bubbles_null_for_required_lists
     schema_sdl = "type Test { req: String! opt: String } type Query { test: [Test!]! }"
     request = GraphQL::Stitching::Request.new(

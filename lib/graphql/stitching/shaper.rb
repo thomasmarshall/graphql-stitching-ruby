@@ -7,10 +7,16 @@ module GraphQL
     # This eliminates unrequested export selections and applies null bubbling.
     # @api private
     class Shaper
-      def initialize(request)
+      module Strategy
+        DEFAULT = :default
+        REMOVE_LIST_ITEMS = :remove_list_items
+      end
+
+      def initialize(request, strategy: Strategy::DEFAULT)
         @request = request
         @supergraph = request.supergraph
         @root_type = nil
+        @strategy = strategy
       end
 
       def perform!(raw)
@@ -95,7 +101,13 @@ module GraphQL
           result
         end
 
-        return nil if contains_null && next_node_type.non_null?
+        if contains_null && next_node_type.non_null?
+          if @strategy == Strategy::REMOVE_LIST_ITEMS
+            resolved_list.compact!
+          else
+            return nil
+          end
+        end
 
         resolved_list
       end
