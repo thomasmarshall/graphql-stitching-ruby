@@ -155,4 +155,17 @@ describe 'GraphQL::Stitching::Composer, validate boundaries' do
       assert compose_definitions({ "a" => a, "b" => b })
     end
   end
+
+  def test_validates_composite_boundaries
+    a = %{
+      type T { id:ID! namespace: String! key: String! }
+      type Query { a(id: ID!):T @stitch(key: "id") }
+    }
+    b = %{
+      type T { id:ID! value: String! }
+      type Query { b(namespace: String!, key: String!):T @stitch(key: "namespace key") }
+    }
+
+    assert compose_definitions({ "a" => a, "b" => b })
+  end
 end

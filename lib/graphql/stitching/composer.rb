@@ -540,28 +540,30 @@ module GraphQL
             end
 
             boundary_configs.each do |config|
-              key_selections = GraphQL.parse("{ #{config.key} }").definitions[0].selections
+              keys = []
+              args = []
 
-              if key_selections.length != 1
-                raise ComposerError, "Boundary key at #{type_name}.#{field_name} must specify exactly one key."
-              end
+              GraphQL.parse("{ #{config.key} }").definitions[0].selections.each do |key_selection|
+                argument_name = key_selection.alias
+                argument_name ||= if field_candidate.arguments.size == 1
+                  field_candidate.arguments.keys.first
+                elsif field_candidate.arguments[key_selection.name]
+                  key_selection.name
+                end
 
-              argument_name = key_selections[0].alias
-              argument_name ||= if field_candidate.arguments.size == 1
-                field_candidate.arguments.keys.first
-              elsif field_candidate.arguments[key_selections[0].name]
-                key_selections[0].name
-              end
+                argument = field_candidate.arguments[argument_name]
+                unless argument
+                  # contextualize this... "boundaries with multiple args need mapping aliases."
+                  raise ComposerError, "Invalid boundary argument `#{argument_name}` for #{type_name}.#{field_name}."
+                end
 
-              argument = field_candidate.arguments[argument_name]
-              unless argument
-                # contextualize this... "boundaries with multiple args need mapping aliases."
-                raise ComposerError, "Invalid boundary argument `#{argument_name}` for #{type_name}.#{field_name}."
-              end
+                argument_structure = Util.flatten_type_structure(argument.type)
+                if argument_structure.length != boundary_structure.length
+                  raise ComposerError, "Mismatched input/output for #{type_name}.#{field_name}.#{argument_name} boundary. Arguments must map directly to results."
+                end
 
-              argument_structure = Util.flatten_type_structure(argument.type)
-              if argument_structure.length != boundary_structure.length
-                raise ComposerError, "Mismatched input/output for #{type_name}.#{field_name}.#{argument_name} boundary. Arguments must map directly to results."
+                keys << key_selection.name
+                args << argument_name
               end
 
               boundary_type_name = if config.type_name
@@ -575,13 +577,17 @@ module GraphQL
                 boundary_type.graphql_name
               end
 
+              if keys.many? && boundary_structure.first.list?
+                raise ComposerError, "Cannot use composite keys with list field types."
+              end
+
               @boundary_map[boundary_type_name] ||= []
               @boundary_map[boundary_type_name] << Boundary.new(
                 location: location,
                 type_name: boundary_type_name,
-                key: key_selections[0].name,
+                keys: keys,
                 field: field_candidate.name,
-                arg: argument_name,
+                args: args,
                 list: boundary_structure.first.list?,
                 federation: config.federation,
               )

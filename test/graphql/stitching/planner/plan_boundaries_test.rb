@@ -93,7 +93,7 @@ describe "GraphQL::Stitching::Planner, boundaries" do
       path: ["storefront", "products"],
       boundary: {
         field: "product",
-        key: "upc",
+        keys: ["upc"],
       },
     }
 
@@ -105,7 +105,7 @@ describe "GraphQL::Stitching::Planner, boundaries" do
       path: ["storefront", "products", "manufacturer"],
       boundary: {
         field: "manufacturer",
-        key: "id",
+        keys: ["id"],
       },
     }
   end
@@ -138,7 +138,7 @@ describe "GraphQL::Stitching::Planner, boundaries" do
       path: ["manufacturer"],
       boundary: {
         field: "productsManufacturer",
-        key: "id",
+        keys: ["id"],
       },
     }
 
@@ -191,7 +191,7 @@ describe "GraphQL::Stitching::Planner, boundaries" do
       path: ["apple"],
       boundary: {
         field: "node",
-        key: "id",
+        keys: ["id"],
       },
     }
   end
@@ -235,7 +235,7 @@ describe "GraphQL::Stitching::Planner, boundaries" do
       path: ["apple"],
       boundary: {
         field: "node",
-        key: "id",
+        keys: ["id"],
       },
     }
   end
@@ -280,7 +280,7 @@ describe "GraphQL::Stitching::Planner, boundaries" do
       path: ["node"],
       boundary: {
         field: "fruit",
-        key: "id",
+        keys: ["id"],
       },
     }
   end

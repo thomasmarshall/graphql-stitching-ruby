@@ -12,18 +12,18 @@ describe 'GraphQL::Stitching::Composer, merging boundary queries' do
       "Test" => [
         GraphQL::Stitching::Boundary.new(
           location: "a",
-          key: "id",
+          keys: ["id"],
           field: "a",
-          arg: "id",
+          args: ["id"],
           list: false,
           federation: false,
           type_name: "Test"
         ),
         GraphQL::Stitching::Boundary.new(
           location: "b",
-          key: "id",
+          keys: ["id"],
           field: "b",
-          arg: "ids",
+          args: ["ids"],
           list: true,
           federation: false,
           type_name: "Test"
@@ -186,8 +186,8 @@ describe 'GraphQL::Stitching::Composer, merging boundary queries' do
       conditions = []
       conditions << (b.location == location)
       conditions << (b.field == field) if field
-      conditions << (b.arg == arg) if arg
-      conditions << (b.key == key) if key
+      conditions << (b.args == [arg]) if arg
+      conditions << (b.keys == [key]) if key
       conditions.all?
     end
     assert boundary, "No boundary found for #{[location, type_name, key, field, arg].join(".")}"

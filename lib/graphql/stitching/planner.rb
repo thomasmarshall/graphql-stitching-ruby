@@ -74,7 +74,7 @@ module GraphQL
         boundary: nil
       )
         # coalesce repeat parameters into a single entrypoint
-        entrypoint = String.new("#{parent_index}/#{location}/#{parent_type.graphql_name}/#{boundary&.key}")
+        entrypoint = String.new("#{parent_index}/#{location}/#{parent_type.graphql_name}/#{boundary&.keys}")
         path.each { entrypoint << "/#{_1}" }
 
         step = @steps_by_entrypoint[entrypoint]
@@ -275,9 +275,9 @@ module GraphQL
           # E) Translate boundary pathways into new entrypoints.
           routes.each_value do |route|
             route.reduce(locale_selections) do |parent_selections, boundary|
-              # E.1) Add the key of each boundary query into the prior location's selection set.
-              if boundary.key
-                foreign_key = ExportSelection.key(boundary.key)
+              # E.1) Add the keys of each boundary query into the prior location's selection set.
+              boundary.keys&.each do |key|
+                foreign_key = ExportSelection.key(key)
                 has_key = false
                 has_typename = false
 
@@ -287,7 +287,7 @@ module GraphQL
                   has_typename ||= node.alias == ExportSelection.typename_node.alias
                 end
 
-                parent_selections << ExportSelection.key_node(boundary.key) unless has_key
+                parent_selections << ExportSelection.key_node(key) unless has_key
                 parent_selections << ExportSelection.typename_node unless has_typename
               end
 
@@ -298,7 +298,7 @@ module GraphQL
                 parent_type: parent_type,
                 selections: remote_selections_by_location[boundary.location] || [],
                 path: path.dup,
-                boundary: boundary.key ? boundary : nil,
+                boundary: boundary.keys ? boundary : nil,
               ).selections
             end
           end

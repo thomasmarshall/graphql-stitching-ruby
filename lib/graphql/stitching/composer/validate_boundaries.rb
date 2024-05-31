@@ -32,16 +32,16 @@ module GraphQL::Stitching
 
         # only one boundary allowed per type/location/key
         boundaries_by_location_and_key = boundaries.each_with_object({}) do |boundary, memo|
-          if memo.dig(boundary.location, boundary.key)
-            raise Composer::ValidationError, "Multiple boundary queries for `#{type.graphql_name}.#{boundary.key}` "\
+          if (duplicate_keys = memo.fetch(boundary.location, []) & boundary.keys).any?
+            raise Composer::ValidationError, "Multiple boundary queries for `#{type.graphql_name}.#{duplicate_keys.first}` "\
               "found in #{boundary.location}. Limit one boundary query per type and key in each location. "\
               "Abstract boundaries provide all possible types."
           end
-          memo[boundary.location] ||= {}
-          memo[boundary.location][boundary.key] = boundary
+          memo[boundary.location] ||= []
+          memo[boundary.location].concat(boundary.keys)
         end
 
-        boundary_keys = boundaries.map(&:key).to_set
+        boundary_keys = boundaries.flat_map(&:keys).to_set
 
         # All non-key fields must be resolvable in at least one boundary location
         supergraph.locations_by_type_and_field[type.graphql_name].each do |field_name, locations|

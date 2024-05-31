@@ -33,9 +33,9 @@ module GraphQL
               boundary_map[type_name] << Boundary.new(
                 type_name: kwargs.fetch(:type_name, type_name),
                 location: kwargs[:location],
-                key: kwargs[:key],
+                keys: kwargs[:keys],
                 field: kwargs[:field],
-                arg: kwargs[:arg],
+                args: kwargs[:args],
                 list: kwargs[:list] || false,
                 federation: kwargs[:federation] || false,
               )
@@ -126,9 +126,9 @@ module GraphQL
                 kwargs = d.arguments.keyword_arguments
                 d.graphql_name == ResolverDirective.graphql_name &&
                   kwargs[:location] == boundary.location &&
-                  kwargs[:key] == boundary.key &&
+                  kwargs[:keys] == boundary.keys &&
                   kwargs[:field] == boundary.field &&
-                  kwargs[:arg] == boundary.arg &&
+                  kwargs[:args] == boundary.args &&
                   kwargs.fetch(:list, false) == boundary.list &&
                   kwargs.fetch(:federation, false) == boundary.federation
               end
@@ -136,9 +136,9 @@ module GraphQL
               type.directive(ResolverDirective, **{
                 type_name: (boundary.type_name if boundary.type_name != type_name),
                 location: boundary.location,
-                key: boundary.key,
+                keys: boundary.keys,
                 field: boundary.field,
-                arg: boundary.arg,
+                args: boundary.args,
                 list: boundary.list || nil,
                 federation: boundary.federation || nil,
               }.tap(&:compact!)) if existing.nil?
@@ -249,7 +249,7 @@ module GraphQL
           if type_name == @schema.query.graphql_name
             GraphQL::Stitching::EMPTY_ARRAY
           else
-            @boundaries[type_name].map(&:key).tap(&:uniq!)
+            @boundaries[type_name].map(&:keys).tap(&:uniq!)
           end
         end
       end
@@ -260,22 +260,24 @@ module GraphQL
         possible_keys_by_type = @possible_keys_by_type_and_location[type_name] ||= {}
         possible_keys_by_type[location] ||= begin
           location_fields = fields_by_type_and_location[type_name][location] || []
-          location_fields & possible_keys_for_type(type_name)
+          possible_keys_for_type(type_name).select do |keys|
+            keys.all? { |key| location_fields.include?(key) }
+          end
         end
       end
 
       # For a given type, route from one origin location to one or more remote locations
       # used to connect a partial type across locations via boundary queries
       def route_type_to_locations(type_name, start_location, goal_locations)
-        key_count = possible_keys_for_type(type_name).length
+        keys_count = possible_keys_for_type(type_name).length
 
-        if key_count.zero?
+        if keys_count.zero?
           # nested root scopes have no boundary keys and just return a location
           goal_locations.each_with_object({}) do |goal_location, memo|
             memo[goal_location] = [Boundary.new(location: goal_location)]
           end
 
-        elsif key_count > 1
+        elsif keys_count > 1
           # multiple keys use an A* search to traverse intermediary locations
           route_type_to_locations_via_search(type_name, start_location, goal_locations)
 
@@ -292,7 +294,7 @@ module GraphQL
 
       private
 
-      PathNode = Struct.new(:location, :key, :cost, :boundary, keyword_init: true)
+      PathNode = Struct.new(:location, :keys, :cost, :boundary, keyword_init: true)
 
       # tunes A* search to favor paths with fewest joining locations, ie:
       # favor longer paths through target locations over shorter paths with additional locations.
@@ -300,19 +302,19 @@ module GraphQL
         results = {}
         costs = {}
 
-        paths = possible_keys_for_type_and_location(type_name, start_location).map do |possible_key|
-          [PathNode.new(location: start_location, key: possible_key, cost: 0)]
+        paths = possible_keys_for_type_and_location(type_name, start_location).map do |possible_keys|
+          [PathNode.new(location: start_location, keys: possible_keys, cost: 0)]
         end
 
         while paths.any?
           path = paths.pop
           current_location = path.last.location
-          current_key = path.last.key
+          current_keys = path.last.keys
           current_cost = path.last.cost
 
           @boundaries[type_name].each do |boundary|
             forward_location = boundary.location
-            next if current_key != boundary.key
+            next unless current_keys.all? { |key| boundary.keys.include?(key) }
             next if path.any? { _1.location == forward_location }
 
             best_cost = costs[forward_location] || Float::INFINITY
@@ -321,7 +323,7 @@ module GraphQL
             path.pop
             path << PathNode.new(
               location: current_location,
-              key: current_key,
+              keys: current_keys,
               cost: current_cost,
               boundary: boundary,
             )
@@ -338,8 +340,8 @@ module GraphQL
             forward_cost = path.last.cost
             costs[forward_location] = forward_cost if forward_cost < best_cost
 
-            possible_keys_for_type_and_location(type_name, forward_location).each do |possible_key|
-              paths << [*path, PathNode.new(location: forward_location, key: possible_key, cost: forward_cost)]
+            possible_keys_for_type_and_location(type_name, forward_location).each do |possible_keys|
+              paths << [*path, PathNode.new(location: forward_location, keys: possible_keys, cost: forward_cost)]
             end
           end
 

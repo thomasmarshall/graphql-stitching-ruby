@@ -79,7 +79,7 @@ describe "GraphQL::Stitching::Planner, abstract merged types" do
       if_type: "Product",
       boundary: {
         field: "products",
-        key: "id",
+        keys: ["id"],
       },
     }
   end
@@ -264,7 +264,7 @@ describe "GraphQL::Stitching::Planner, abstract merged types" do
       if_type: "Apple",
       boundary: {
         location: "b",
-        key: "id",
+        keys: ["id"],
       },
     }
 
@@ -276,7 +276,7 @@ describe "GraphQL::Stitching::Planner, abstract merged types" do
       if_type: "Apple",
       boundary: {
         location: "c",
-        key: "id",
+        keys: ["id"],
       },
     }
 
@@ -288,7 +288,7 @@ describe "GraphQL::Stitching::Planner, abstract merged types" do
       if_type: "Banana",
       boundary: {
         location: "b",
-        key: "id",
+        keys: ["id"],
       },
     }
   end

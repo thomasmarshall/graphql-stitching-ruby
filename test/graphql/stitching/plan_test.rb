@@ -7,8 +7,8 @@ describe "GraphQL::Stitching::Plan" do
     @boundary = GraphQL::Stitching::Boundary.new(
       location: "products",
       field: "storefronts",
-      arg: "ids",
-      key: "id",
+      args: ["ids"],
+      keys: ["id"],
       list: true,
       type_name: "Storefront"
     )
@@ -40,9 +40,9 @@ describe "GraphQL::Stitching::Plan" do
         "boundary" => {
           "location" => "products",
           "type_name" => "Storefront",
-          "key" => "id",
+          "keys" => ["id"],
           "field" => "storefronts",
-          "arg" => "ids",
+          "args" => ["ids"],
           "list" => true,
         },
       }],

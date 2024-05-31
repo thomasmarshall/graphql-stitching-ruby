@@ -7,9 +7,9 @@ module GraphQL::Stitching
       locations OBJECT, INTERFACE, UNION
       argument :type_name, String, required: false
       argument :location, String, required: true
-      argument :key, String, required: true
+      argument :keys, [String], required: true
       argument :field, String, required: true
-      argument :arg, String, required: true
+      argument :args, [String], required: true
       argument :list, Boolean, required: false
       argument :federation, Boolean, required: false
       repeatable true

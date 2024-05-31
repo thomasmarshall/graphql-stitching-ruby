@@ -87,24 +87,24 @@ describe "GraphQL::Stitching::Supergraph" do
       GraphQL::Stitching::Boundary.new(
         location: "manufacturers",
         field: "manufacturer",
-        arg: "id",
-        key: "id",
+        args: ["id"],
+        keys: ["id"],
       ),
     ],
     "Product" => [
       GraphQL::Stitching::Boundary.new(
         location: "products",
         field: "products",
-        arg: "upc",
-        key: "upc",
+        args: ["upc"],
+        keys: ["upc"],
       ),
     ],
     "Storefront" => [
       GraphQL::Stitching::Boundary.new(
         location: "storefronts",
         field: "storefronts",
-        arg: "id",
-        key: "id",
+        args: ["id"],
+        keys: ["id"],
       ),
     ],
   }
@@ -142,8 +142,8 @@ describe "GraphQL::Stitching::Supergraph" do
       boundaries: BOUNDARIES_MAP,
     )
 
-    assert_equal ["upc"], supergraph.possible_keys_for_type_and_location("Product", "products")
-    assert_equal ["upc"], supergraph.possible_keys_for_type_and_location("Product", "storefronts")
+    assert_equal [["upc"]], supergraph.possible_keys_for_type_and_location("Product", "products")
+    assert_equal [["upc"]], supergraph.possible_keys_for_type_and_location("Product", "storefronts")
     assert_equal [], supergraph.possible_keys_for_type_and_location("Product", "manufacturers")
   end
 
@@ -311,11 +311,11 @@ describe "GraphQL::Stitching::Supergraph" do
       assert @schema_sdl.include?("directive @resolver")
       assert @schema_sdl.include?("directive @source")
       assert @schema_sdl.include?(squish_string(%|
-        interface I @resolver(location: "alpha", key: "id", field: "a", arg: "id") {
+        interface I @resolver(location: "alpha", keys: ["id"], field: "a", args: ["id"]) {
       |))
       assert @schema_sdl.include?(squish_string(%|
-        type T implements I @resolver(location: "bravo", key: "id", field: "b", arg: "id")
-                            @resolver(typeName: "I", location: "alpha", key: "id", field: "a", arg: "id") {
+        type T implements I @resolver(location: "bravo", keys: ["id"], field: "b", args: ["id"])
+                            @resolver(typeName: "I", location: "alpha", keys: ["id"], field: "a", args: ["id"]) {
       |))
       assert @schema_sdl.include?(%|id: ID! @source(location: "alpha") @source(location: "bravo")|)
       assert @schema_sdl.include?(%|a: String @source(location: "alpha")|)

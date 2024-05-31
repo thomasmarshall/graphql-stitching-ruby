@@ -16,8 +16,8 @@ describe "GraphQL::Stitching::Executor, BoundarySource" do
       boundary: GraphQL::Stitching::Boundary.new(
         location: "products",
         field: "storefronts",
-        arg: "ids",
-        key: "id",
+        args: ["ids"],
+        keys: ["id"],
         list: true,
         type_name: "Storefront"
       )
@@ -34,8 +34,8 @@ describe "GraphQL::Stitching::Executor, BoundarySource" do
       boundary: GraphQL::Stitching::Boundary.new(
         location: "products",
         field: "product",
-        arg: "upc",
-        key: "upc",
+        args: ["upc"],
+        keys: ["upc"],
         list: false,
         type_name: "Product"
       )

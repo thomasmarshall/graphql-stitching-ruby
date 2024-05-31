@@ -6,9 +6,9 @@ module GraphQL
     Boundary = Struct.new(
       :location,
       :type_name,
-      :key,
+      :keys,
       :field,
-      :arg,
+      :args,
       :list,
       :federation,
       keyword_init: true
@@ -17,9 +17,9 @@ module GraphQL
         {
           location: location,
           type_name: type_name,
-          key: key,
+          keys: keys,
           field: field,
-          arg: arg,
+          args: args,
           list: list,
           federation: federation,
         }.tap(&:compact!)

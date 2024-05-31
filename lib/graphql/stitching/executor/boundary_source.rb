@@ -57,15 +57,18 @@ module GraphQL::Stitching
           if boundary.list
             input = origin_set.each_with_index.reduce(String.new) do |memo, (origin_obj, index)|
               memo << "," if index > 0
-              memo << build_key(boundary.key, origin_obj, federation: boundary.federation)
+              memo << build_key(boundary.keys[0], origin_obj, federation: boundary.federation)
               memo
             end
 
-            "_#{batch_index}_result: #{boundary.field}(#{boundary.arg}:[#{input}]) #{op.selections}"
+            "_#{batch_index}_result: #{boundary.field}(#{boundary.args[0]}:[#{input}]) #{op.selections}"
           else
             origin_set.map.with_index do |origin_obj, index|
-              input = build_key(boundary.key, origin_obj, federation: boundary.federation)
-              "_#{batch_index}_#{index}_result: #{boundary.field}(#{boundary.arg}:#{input}) #{op.selections}"
+              arguments = boundary.keys.map.with_index do |key, index|
+                "#{boundary.args[index]}:#{build_key(key, origin_obj, federation: boundary.federation)}"
+              end.join(",")
+
+              "_#{batch_index}_#{index}_result: #{boundary.field}(#{arguments}) #{op.selections}"
             end
           end
         end
