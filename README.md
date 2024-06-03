@@ -7,6 +7,7 @@ GraphQL stitching composes a single schema from multiple underlying GraphQL reso
 **Supports:**
 - Merged object and abstract types.
 - Multiple keys per merged type.
+- Composite keys.
 - Shared objects, fields, enums, and inputs across locations.
 - Combining local and remote schemas.
 - File uploads via [multipart form spec](https://github.com/jaydenseric/graphql-multipart-request-spec).
@@ -257,6 +258,16 @@ type Product {
 }
 type Query {
   product(id: ID, sku: ID): Product @stitch(key: "id") @stitch(key: "sku")
+}
+```
+
+#### Composite keys
+
+The `@stitch` directive accepts composite keys when multiple arguments are required for lookup:
+
+```graphql
+type Query {
+  project(namespace: String!, handle: String!): Project @stitch(key: "namespace handle")
 }
 ```
 
