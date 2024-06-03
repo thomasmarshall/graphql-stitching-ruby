@@ -549,8 +549,8 @@ module GraphQL
               argument_name = key_selections[0].alias
               argument_name ||= if field_candidate.arguments.size == 1
                 field_candidate.arguments.keys.first
-              elsif field_candidate.arguments[config.key]
-                config.key
+              elsif field_candidate.arguments[key_selections[0].name]
+                key_selections[0].name
               end
 
               argument = field_candidate.arguments[argument_name]
