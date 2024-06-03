@@ -33,9 +33,9 @@ module GraphQL
               boundary_map[type_name] << Boundary.new(
                 type_name: kwargs.fetch(:type_name, type_name),
                 location: kwargs[:location],
-                keys: kwargs[:keys],
+                keys: kwargs[:keys] || [kwargs[:key]], # backwards compatibility
                 field: kwargs[:field],
-                args: kwargs[:args],
+                args: kwargs[:args] || [kwargs[:arg]], # backwards compatibility
                 list: kwargs[:list] || false,
                 federation: kwargs[:federation] || false,
               )

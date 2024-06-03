@@ -347,6 +347,24 @@ describe "GraphQL::Stitching::Supergraph" do
       assert_equal @supergraph.boundaries, supergraph_import.boundaries
     end
 
+    def test_from_definitions_is_backwards_compatible
+      @schema_sdl = safely_replace(@schema_sdl, "keys: [String!]!", "key: String!")
+      @schema_sdl = safely_replace(@schema_sdl, "args: [String!]!", "arg: String!")
+      @schema_sdl = safely_replace(@schema_sdl, /keys: \[(["\w]+)\]/, 'key: \1')
+      @schema_sdl = safely_replace(@schema_sdl, /args: \[(["\w]+)\]/, 'arg: \1')
+
+      supergraph_import = GraphQL::Stitching::Supergraph.from_definition(@schema_sdl, executables: {
+        "alpha" => Proc.new { true },
+        "bravo" => Proc.new { true },
+      })
+
+      assert_equal @supergraph.fields, supergraph_import.fields
+      assert_equal @supergraph.boundaries, supergraph_import.boundaries
+      assert_equal ["alpha", "bravo"], supergraph_import.locations.sort
+      assert_equal @supergraph.schema.types.keys.sort, supergraph_import.schema.types.keys.sort
+      assert_equal @supergraph.boundaries, supergraph_import.boundaries
+    end
+
     def test_normalizes_executable_location_names
       supergraph_import = GraphQL::Stitching::Supergraph.from_definition(@schema_sdl, executables: {
         alpha: Proc.new { true },
@@ -372,5 +390,11 @@ describe "GraphQL::Stitching::Supergraph" do
         })
       end
     end
+  end
+
+  def safely_replace(string, from, to)
+    result = string.gsub(from, to)
+    raise "Nothing was replaced from: #{from} to: #{to}" if result == string
+    result
   end
 end
