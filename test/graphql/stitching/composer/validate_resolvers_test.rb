@@ -72,6 +72,20 @@ describe 'GraphQL::Stitching::Composer, validate resolvers' do
     assert compose_definitions({ "a" => a, "b" => b, "c" => c })
   end
 
+  def test_permits_no_resolver_query_for_abstract_types_that_can_be_fully_resolved_elsewhere
+    a = %|
+      interface I { id:ID! }
+      type T implements I { id:ID! name:String }
+      type Query { a(id:ID!):I @stitch(key: "id") }
+    |
+    b = %|
+      type T { id:ID! }
+      type Query { b:T }
+    |
+
+    assert compose_definitions({ "a" => a, "b" => b })
+  end
+
   def test_permits_no_resolver_query_for_key_only_types
     a = %|type T { id:ID! name:String } type Query { a(id: ID!):T @stitch(key: "id") }|
     b = %|type T { id:ID! } type Query { b:T }|
